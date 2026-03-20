@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Cotton Kurta",
+    "price": 999,
+    "description": "Soft breathable cotton kurta for daily wear",
+    "category": "ethnic",
+    "colors": ["white", "blue", "black"]
+  },
+  {
+    "name": "Silk Saree",
+    "price": 4999,
+    "description": "Premium silk saree for weddings and festivals",
+    "category": "ethnic",
+    "colors": ["red", "gold"]
+  },
+  {
+    "name": "Denim Jacket",
+    "price": 1999,
+    "description": "Stylish denim jacket for casual outings",
+    "category": "western",
+    "colors": ["blue", "black"]
+  }
+]
