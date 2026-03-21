@@ -20,7 +20,7 @@ def build_context(results):
 
 
 def run():
-    print("🧠 Voice Agent Started...")
+    print("Voice Agent Started...")
 
     while True:
         # 1. Listen
