@@ -22,7 +22,18 @@ def speak(text, lang):
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         path = tmp.name
 
-    asyncio.run(_generate(text, voice, path))
+    #  Safe async handling for both Windows & Linux
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        import nest_asyncio
+        nest_asyncio.apply()
+        loop.run_until_complete(_generate(text, voice, path))
+    else:
+        asyncio.run(_generate(text, voice, path))
 
     pygame.mixer.music.load(path)
     pygame.mixer.music.play()
