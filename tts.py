@@ -19,10 +19,13 @@ async def _generate(text, voice, path):
 def speak(text, lang):
     voice = VOICE_MAP.get(lang, "en-US-JennyNeural")
 
+    if lang not in VOICE_MAP:
+        voice = "en-US-JennyNeural"
+
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         path = tmp.name
 
-    #  Safe async handling for both Windows & Linux
+    # Safe async handling for both Windows & Linux
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
