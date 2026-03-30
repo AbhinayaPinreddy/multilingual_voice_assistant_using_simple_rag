@@ -16,4 +16,4 @@ embeddings = model.encode(texts)
 
 np.save("embeddings.npy", embeddings)
 
-print("✅ embeddings saved")
+print(" embeddings saved")
