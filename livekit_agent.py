@@ -25,7 +25,7 @@ AGENT_PLAYBACK_CH = 1
 _agent_audio_source: rtc.AudioSource | None = None
 
 
-# 🔑 Get token from backend
+#  Get token from backend
 def get_token():
     res = requests.get(
         config.TOKEN_SERVER_URL,
@@ -34,7 +34,7 @@ def get_token():
     return res.json()["token"]
 
 
-# 🧠 Build RAG context
+#  Build RAG context
 def build_context(results):
     if not results:
         return "No products found."
@@ -86,7 +86,7 @@ async def play_mp3_to_livekit(source: rtc.AudioSource, mp3_path: str) -> None:
     """Stream decoded TTS to the room as 10 ms PCM frames."""
     pcm = await asyncio.to_thread(mp3_to_pcm48_mono, mp3_path)
     if not pcm:
-        print("⚠️ No PCM decoded from TTS; skipping playback")
+        print(" No PCM decoded from TTS; skipping playback")
         return
 
     source.clear_queue()
@@ -142,7 +142,7 @@ async def _process_utterance(audio_path: str) -> None:
                 print("⏭ Skipping junk / noise transcript:", repr(t))
                 return
 
-            print("🧑 User:", t, "| Lang:", lang)
+            print(" User:", t, "| Lang:", lang)
 
             # RAG uses multilingual embeddings on the raw transcript; English query for LLM in parallel.
             if lang == "en":
@@ -157,17 +157,17 @@ async def _process_utterance(audio_path: str) -> None:
             answer_en = await asyncio.to_thread(generate, context, query_en)
             final = await asyncio.to_thread(from_english, answer_en, lang)
 
-            print("🤖 Bot:", final)
+            print(" Bot:", final)
 
             mp3_path = await speak(final, lang)
-            print("🔊 TTS file:", mp3_path)
+            print(" TTS file:", mp3_path)
 
             src = _agent_audio_source
             if src is not None:
                 await play_mp3_to_livekit(src, mp3_path)
-                print("🔊 Agent audio sent to the meeting")
+                print(" Agent audio sent to the meeting")
             else:
-                print("⚠️ No AudioSource; only saved file above")
+                print(" No AudioSource; only saved file above")
         finally:
             try:
                 os.unlink(audio_path)
@@ -188,15 +188,15 @@ def _write_wav(path: str, pcm: bytes, sample_rate: int, channels: int) -> None:
         wf.writeframes(pcm)
 
 
-# 🎤 Handle audio stream (silence-based endpointing — full sentence, not 1s slices)
+#  Handle audio stream (silence-based endpointing — full sentence, not 1s slices)
 async def handle_audio(room, track):
-    print("🎤 Track received")
+    print(" Track received")
 
     if not isinstance(track, rtc.RemoteAudioTrack):
-        print("❌ Not an audio track, skipping...")
+        print(" Not an audio track, skipping...")
         return
 
-    print("✅ Audio track confirmed")
+    print(" Audio track confirmed")
 
     stream = rtc.AudioStream(track)
 
@@ -274,7 +274,7 @@ async def handle_audio(room, track):
         asyncio.create_task(_process_utterance(wav_path))
 
 
-# 🚀 Main function
+#  Main function
 async def main():
     global _agent_audio_source
 
@@ -289,13 +289,13 @@ async def main():
     pub_opts = rtc.TrackPublishOptions()
     pub_opts.source = rtc.TrackSource.SOURCE_MICROPHONE
     await room.local_participant.publish_track(agent_track, pub_opts)
-    print("🚀 Agent running... Mic published for TTS; waiting for user audio...")
+    print(" Agent running... Mic published for TTS; waiting for user audio...")
 
     @room.on("track_subscribed")
     def on_track(track, publication, participant):
         if participant.identity == room.local_participant.identity:
             return
-        print("🔥 Track subscribed")
+        print(" Track subscribed")
 
         if track.kind == rtc.TrackKind.KIND_AUDIO:
             asyncio.create_task(handle_audio(room, track))
@@ -305,6 +305,6 @@ async def main():
     await asyncio.Future()
 
 
-# ▶️ Run
+# Run
 if __name__ == "__main__":
     asyncio.run(main())
