@@ -1,48 +1,25 @@
 import edge_tts
-import asyncio
 import tempfile
-import pygame
-import os
 
-pygame.mixer.init()
-
+# Microsoft Edge neural voices (India) — all female.
 VOICE_MAP = {
-    "en": "en-US-JennyNeural",
+    "en": "en-IN-NeerjaNeural",
     "hi": "hi-IN-SwaraNeural",
-    "te": "te-IN-ShrutiNeural"
+    "te": "te-IN-ShrutiNeural",
 }
 
-async def _generate(text, voice, path):
-    communicate = edge_tts.Communicate(text, voice=voice)
-    await communicate.save(path)
+_DEFAULT_VOICE = "en-IN-NeerjaNeural"
 
-def speak(text, lang):
-    voice = VOICE_MAP.get(lang, "en-US-JennyNeural")
 
-    if lang not in VOICE_MAP:
-        voice = "en-US-JennyNeural"
+async def generate_audio(text, lang, path):
+    voice = VOICE_MAP.get(lang, _DEFAULT_VOICE)
+    com = edge_tts.Communicate(text, voice)
+    await com.save(path)
 
+
+async def speak(text, lang):
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         path = tmp.name
 
-    # Safe async handling for both Windows & Linux
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        import nest_asyncio
-        nest_asyncio.apply()
-        loop.run_until_complete(_generate(text, voice, path))
-    else:
-        asyncio.run(_generate(text, voice, path))
-
-    pygame.mixer.music.load(path)
-    pygame.mixer.music.play()
-
-    while pygame.mixer.music.get_busy():
-        pygame.time.wait(50)
-
-    pygame.mixer.music.unload()
-    os.remove(path)
+    await generate_audio(text, lang, path)
+    return path

@@ -1,36 +1,28 @@
-import os
 from groq import Groq
+import os
 from dotenv import load_dotenv
 
-# Load .env file
+import config
+
 load_dotenv()
 
-# Get API key
-api_key = os.getenv("GROQ_API_KEY")
-
-client = Groq(api_key=api_key)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 def generate(context, query):
-    prompt = f"""
-    You are a helpful shopping assistant.
+    prompt = f"""Indian shopping assistant. Answer ONLY from the context. One or two short sentences. Include ₹ price.
 
-    Answer ONLY using the given products.
-    If no relevant product is found, say that clearly.
+Context:
+{context}
 
-    Keep the answer short and natural.
+Question: {query}
+"""
 
-    Context:
-    {context}
-
-    Question:
-    {query}
-    """
-
-    response = client.chat.completions.create(
+    res = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
+        temperature=0.25,
+        max_tokens=config.LLM_MAX_TOKENS,
     )
 
-    return response.choices[0].message.content
+    return res.choices[0].message.content

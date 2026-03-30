@@ -2,37 +2,37 @@ import json
 import numpy as np
 import re
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
-# Load products
-with open("products.json", "r") as f:
+import config
+
+with open("products.json") as f:
     products = json.load(f)
 
-# Load embedding model
 model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+product_vectors = np.load("embeddings.npy")
 
-# Precompute embeddings
-product_texts = [
-    f"{p['name']} {p['description']} {p['category']}"
-    for p in products
-]
-
-product_vectors = model.encode(product_texts)
 
 def extract_price(query):
     nums = re.findall(r"\d+", query)
     return int(nums[0]) if nums else None
 
+
 def retrieve(query):
-    query_vec = model.encode([query])[0]
+    """Multilingual query text is fine — same embedder as products. Top-K kept small for LLM latency."""
+    top_k = min(config.RAG_TOP_K, len(products))
+    pool = min(max(12, top_k * 4), len(products))
 
-    scores = np.dot(product_vectors, query_vec)
-    top_indices = np.argsort(scores)[-5:][::-1]
+    query_vec = model.encode([query], show_progress_bar=False)
+    scores = cosine_similarity(query_vec, product_vectors)[0]
 
-    results = [products[i] for i in top_indices]
+    top_idx = np.argpartition(scores, -pool)[-pool:]
+    top_idx = top_idx[np.argsort(scores[top_idx])[::-1]]
 
-    # Smart price filtering
+    results = [products[i] for i in top_idx]
+
     max_price = extract_price(query)
     if max_price:
         results = [p for p in results if p["price"] <= max_price]
 
-    return results[:3]
+    return results[:top_k]
